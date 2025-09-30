@@ -1,0 +1,12 @@
+(executable
+ (name main)
+ (public_name logf)
+ (libraries
+   ; internal lib
+   logf
+   ; deps
+   cmdliner
+   fmt fmt.cli fmt.tty
+   logs logs.cli logs.fmt
+   )
+)

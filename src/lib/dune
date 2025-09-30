@@ -1,0 +1,12 @@
+
+; Main library
+(library
+ (name logf)
+ (libraries
+   unix
+   uutf
+   )
+)
+
+; Lexer for messages
+(ocamllex (modules lexer))

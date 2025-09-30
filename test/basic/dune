@@ -1,0 +1,14 @@
+
+(executable
+ (name basic)
+ (libraries logf)
+)
+
+(rule
+ (target basic.output)
+ (action (with-outputs-to %{target} (run ./basic.exe 50)))
+)
+
+(rule
+  (alias runtest)
+  (action (diff basic.expected basic.output)))

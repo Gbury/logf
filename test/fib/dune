@@ -1,0 +1,14 @@
+
+(executable
+ (name fib)
+ (libraries logf)
+)
+
+(rule
+ (target fib.output)
+ (action (with-outputs-to %{target} (run ./fib.exe 5)))
+)
+
+(rule
+  (alias runtest)
+  (action (diff fib.expected fib.output)))
