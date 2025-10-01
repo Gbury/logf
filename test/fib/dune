@@ -4,11 +4,5 @@
  (libraries logf)
 )
 
-(rule
- (target fib.output)
- (action (with-outputs-to %{target} (run ./fib.exe 5)))
-)
+(cram (deps %{bin:logf} ./fib.exe))
 
-(rule
-  (alias runtest)
-  (action (diff fib.expected fib.output)))

@@ -12,7 +12,7 @@ type run = {
 
 type find = {
   log_file : string;
-  regexp : Logf.Regexp.t;
+  regexp : Logf.Regexp.path_regexp;
 }
 
 type query = {

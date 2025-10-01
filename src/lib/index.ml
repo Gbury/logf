@@ -20,6 +20,7 @@ and forest = tree Vector.t
 type t = {
   root : tree;
   logs : tree Vector.t;
+  parents : id Vector.t;
 }
 
 (* Accessors *)
@@ -27,11 +28,14 @@ type t = {
 
 let root { root; _ } = root
 
-let get { root = _; logs; } id =
+let get { logs; root = _; parents = _; } id =
   Vector.get logs id
 
-let id { id; _ } = id
+let parent { parents; logs = _; root = _; } id =
+  Vector.get parents id
 
+let id { id; _ } = id
+let key { key; _ } = key
 let pos_in_file { pos_in_file; _ } = pos_in_file
 
 (* Creation *)
@@ -45,23 +49,30 @@ let create () =
     children = Vector.create ();
   } in
   let logs = Vector.create () in
+  let parents = Vector.create () in
   Vector.add_last logs root;
-  { root; logs; }
+  Vector.add_last parents root.id;
+  { root; logs; parents; }
 
 let mk_node ~t ~id ?key ~pos () : tree =
   assert (id = Vector.length t.logs); (* TODO: better error msg *)
   let node = { id; key; pos_in_file = pos; children = Vector.create (); } in
   Vector.add_last t.logs node;
+  Vector.add_last t.parents t.root.id;
   node
 
-let add_children (t : tree) a =
-  Vector.append_array t.children a
+let add_children ~index (parent : tree) arr =
+  Array.iter (fun child ->
+      Vector.set index.parents child.id parent.id
+    ) arr;
+  Vector.append_array parent.children arr
 
-let add_child (t : tree) node =
-  Vector.add_last t.children node
+let add_child ~index (parent : tree) node =
+  add_children ~index parent [|node|]
 
 
 (* Debug printing *)
+(* ************************************************************************* *)
 
 let debug_key fmt = function
   | None -> Format.fprintf fmt "<>"
@@ -75,11 +86,12 @@ and debug_forest fmt (f: forest) =
   Vector.iter (fun t ->
       Format.fprintf fmt "@ %a" debug_tree t) f
 
-let debug fmt ({ root; logs = _; } : t) =
+let debug fmt ({ root; logs = _; parents = _; } : t) =
   Format.fprintf fmt "@[<v>%a@]"
     (Vector.print ~pp_sep:Format.pp_print_space debug_tree) root.children
 
 (* Path following *)
+(* ************************************************************************* *)
 
 let rec follow_in_tree (t : tree) ~path ~names n =
   if n >= Path.length path then t, names
@@ -94,7 +106,17 @@ and follow_in_forest (f: forest) ~path ~names n i =
   else
     follow_in_tree (Vector.get f i) ~path ~names (n + 1)
 
-let follow ({ root; logs = _; } : t) ~path =
+let follow ({ root; logs = _; parents = _; } : t) ~path =
   follow_in_tree root ~path ~names:[] 0
 
+
+(* Path name of a node *)
+(* ************************************************************************* *)
+
+let rec path_name_aux ~index (node: tree) acc =
+  if node.id = index.root.id then acc
+  else path_name_aux ~index (get index (parent index node.id)) (key node :: acc)
+
+let path_name index node =
+  path_name_aux ~index node []
 
